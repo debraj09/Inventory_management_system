@@ -65,7 +65,7 @@ export default function CustomerManagement() {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/customers`);
+      const response = await fetch(`${BASE_URL}/customers/list`);
       const result = await response.json();
       if (result.status === 1) {
         setCustomers(result.data);
@@ -109,11 +109,11 @@ export default function CustomerManagement() {
 
     setLoading(true);
     try {
-      let apiEndpoint = `${BASE_URL}/customers`;
+      let apiEndpoint = `${BASE_URL}/customers/add`;
       let method = "POST";
 
       if (isEditing) {
-        apiEndpoint = `${BASE_URL}/customers/${editingId}`;
+        apiEndpoint = `${BASE_URL}/customers/update/${editingId}`;
         method = "PUT";
       }
 
@@ -173,7 +173,7 @@ export default function CustomerManagement() {
     if (!customerToDeleteId) return;
     setDeletingCustomer(true);
     try {
-      const response = await fetch(`${BASE_URL}/customers/${customerToDeleteId}`, {
+      const response = await fetch(`${BASE_URL}/customers/delete/${customerToDeleteId}`, {
         method: "DELETE",
       });
 

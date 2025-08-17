@@ -63,7 +63,7 @@ const ProductManagement = () => {
   const fetchAllProducts = async () => {
     setLoading(true);
     try {
-      const productsResponse = await axios.get(`${BASE_URL}/products`);
+      const productsResponse = await axios.get(`${BASE_URL}/products/list`);
       if (productsResponse.data.status === 1) {
         setAllProducts(productsResponse.data.data);
       } else {
@@ -74,7 +74,7 @@ const ProductManagement = () => {
         });
       }
 
-      const categoriesResponse = await axios.get(`${BASE_URL}/product-categories`);
+      const categoriesResponse = await axios.get(`${BASE_URL}/product-categories/list`);
       if (categoriesResponse.data.status === 1) {
         setProductCategories(categoriesResponse.data.data);
       } else {
@@ -173,9 +173,9 @@ const ProductManagement = () => {
           product_weight: newProduct.product_weight ? parseFloat(newProduct.product_weight) : undefined
         };
         const { product_id } = newProduct;
-        response = await axios.put(`${BASE_URL}/products/${product_id}`, payload);
+        response = await axios.put(`${BASE_URL}/products/update/${product_id}`, payload);
       } else {
-        response = await axios.post(`${BASE_URL}/products`, newProduct);
+        response = await axios.post(`${BASE_URL}/products/add`, newProduct);
       }
 
       if (response.data.status === 1) {
@@ -216,7 +216,7 @@ const ProductManagement = () => {
 
     setIsDeleting(true); // Set deleting state to true
     try {
-      const response = await axios.delete(`${BASE_URL}/products/${productToDeleteId}`);
+      const response = await axios.delete(`${BASE_URL}/products/delete/${productToDeleteId}`);
       if (response.data.status === 1) {
         toast({
           title: "Success",
@@ -404,6 +404,8 @@ const ProductManagement = () => {
                   <TableRow className="bg-slate-50">
                     <TableHead className="font-semibold text-slate-700">Product Name</TableHead>
                     <TableHead className="font-semibold text-slate-700">Product Category</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Product Description</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Product Specification</TableHead>
                     <TableHead className="font-semibold text-slate-700">SKU Number</TableHead>
                     <TableHead className="font-semibold text-slate-700">Product Weight</TableHead>
                     <TableHead className="font-semibold text-slate-700">Created At</TableHead>
@@ -416,6 +418,8 @@ const ProductManagement = () => {
                       <TableRow key={product.product_id} className="hover:bg-slate-50">
                         <TableCell className="font-medium">{product.product_name}</TableCell>
                         <TableCell>{product.category_name}</TableCell>
+                        <TableCell>{product.product_description}</TableCell>
+                        <TableCell>{product.product_specification}</TableCell>
                         <TableCell className="text-slate-500">{product.sku_number}</TableCell>
                         <TableCell className="text-slate-500">{product.product_weight}</TableCell>
                         <TableCell className="text-slate-500">

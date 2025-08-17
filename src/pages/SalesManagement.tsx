@@ -89,7 +89,7 @@ const SalesManagement = () => {
   const fetchSales = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/sales`);
+      const response = await fetch(`${BASE_URL}/sales/list`);
       const result = await response.json();
       if (result.status === 1) {
         setSales(result.data);
@@ -114,7 +114,7 @@ const SalesManagement = () => {
   // Fetch customers for dropdown
   const fetchCustomers = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/customers`);
+      const response = await fetch(`${BASE_URL}/customers/list`);
       const result = await response.json();
       if (result.status === 1) {
         setCustomers(result.data);
@@ -127,7 +127,7 @@ const SalesManagement = () => {
   // Fetch products for dropdown
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/products`);
+      const response = await fetch(`${BASE_URL}/products/list`);
       const result = await response.json();
       if (result.status === 1) {
         setProducts(result.data);
@@ -230,11 +230,11 @@ const SalesManagement = () => {
         }))
       };
 
-      let apiEndpoint = `${BASE_URL}/sales`;
+      let apiEndpoint = `${BASE_URL}/sales/add`;
       let method = "POST";
 
       if (isEditing) {
-        apiEndpoint = `${BASE_URL}/sales/${editingId}`;
+        apiEndpoint = `${BASE_URL}/sales/update/${editingId}`;
         method = "PUT";
       }
 
@@ -303,7 +303,7 @@ const SalesManagement = () => {
     if (!saleToDeleteId) return;
     setDeletingSale(true);
     try {
-      const response = await fetch(`${BASE_URL}/sales/${saleToDeleteId}`, {
+      const response = await fetch(`${BASE_URL}/sales/delete/${saleToDeleteId}`, {
         method: "DELETE",
       });
 
@@ -427,10 +427,10 @@ const SalesManagement = () => {
                       onValueChange={(value) => setFormData({...formData, customer_id: value})}
                       required
                     >
-                      <SelectTrigger className="mt-1">
+                      <SelectTrigger className="mt-1" style={{color:'black'}}>
                         <SelectValue placeholder="Select customer" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent style={{color:'black'}}>
                         {customers.map(customer => (
                           <SelectItem key={customer.customer_id} value={customer.customer_id.toString()}>
                             {customer.company_name}

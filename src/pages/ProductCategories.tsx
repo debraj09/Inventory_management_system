@@ -58,7 +58,7 @@ const ProductCategories = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${BASE_URL}/product-categories`);
+      const response = await fetch(`${BASE_URL}/product-categories/list`);
       if (!response.ok) {
         throw new Error("Failed to fetch data");
       }
@@ -110,7 +110,7 @@ const ProductCategories = () => {
     if (!categoryToDelete) return;
 
     setIsDeletingCategory(true);
-    const url = `${BASE_URL}/${categoryToDelete.category_id}`;
+    const url = `${BASE_URL}/product-categories/delete/${categoryToDelete.category_id}`;
 
     try {
       const response = await fetch(url, {
@@ -158,8 +158,8 @@ const ProductCategories = () => {
     setIsSavingCategory(true);
     const method = isEditing ? "PUT" : "POST";
     const url = isEditing
-      ? `${BASE_URL}/product-categories/${editingCategoryId}`
-      : `${BASE_URL}/product-categories`;
+      ? `${BASE_URL}/product-categories/update/${editingCategoryId}`
+      : `${BASE_URL}/product-categories/add`;
 
     try {
       const response = await fetch(url, {

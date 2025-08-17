@@ -67,7 +67,7 @@ const VendorManagement = () => {
   const fetchVendors = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/vendors`);
+      const response = await fetch(`${BASE_URL}/vendors/list`);
       const result = await response.json();
       if (result.status === 1) {
         setVendors(result.data);
@@ -101,11 +101,11 @@ const VendorManagement = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      let apiEndpoint = `${BASE_URL}/vendors`;
+      let apiEndpoint = `${BASE_URL}/vendors/add`;
       let method = "POST";
 
       if (isEditing) {
-        apiEndpoint = `${BASE_URL}/vendors/${editingId}`;
+        apiEndpoint = `${BASE_URL}/vendors/update/${editingId}`;
         method = "PUT";
       }
 
@@ -167,7 +167,7 @@ const VendorManagement = () => {
     if (!vendorToDeleteId) return;
     setDeletingVendor(true); 
     try {
-      const response = await fetch(`${BASE_URL}/vendors/${vendorToDeleteId}`, {
+      const response = await fetch(`${BASE_URL}/vendors/delete/${vendorToDeleteId}`, {
         method: "DELETE",
       });
 

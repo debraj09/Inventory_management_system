@@ -89,7 +89,7 @@ const PurchaseManagement = () => {
   const fetchPurchases = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/purchases`);
+      const response = await fetch(`${BASE_URL}/purchases/list`);
       const result = await response.json();
       if (result.status === 1) {
         setPurchases(result.data);
@@ -114,7 +114,7 @@ const PurchaseManagement = () => {
   // Fetch products for dropdown
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/products`);
+      const response = await fetch(`${BASE_URL}/products/list`);
       const result = await response.json();
       if (result.status === 1) {
         setProducts(result.data);
@@ -127,7 +127,7 @@ const PurchaseManagement = () => {
   // Fetch vendors for dropdown
   const fetchVendors = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/vendors`);
+      const response = await fetch(`${BASE_URL}/vendors/list`);
       const result = await response.json();
       if (result.status === 1) {
         setVendors(result.data);
@@ -191,11 +191,11 @@ const PurchaseManagement = () => {
         // invoice_upload: "mmmmm" // Uncomment if you want to hardcode like Postman example
       };
 
-      let apiEndpoint = `${BASE_URL}/purchases`;
+      let apiEndpoint = `${BASE_URL}/purchases/add`;
       let method = "POST";
 
       if (isEditing) {
-        apiEndpoint = `${BASE_URL}/purchases/${editingId}`;
+        apiEndpoint = `${BASE_URL}/purchases/update/${editingId}`;
         method = "PUT";
       }
 
@@ -264,7 +264,7 @@ const PurchaseManagement = () => {
     if (!purchaseToDeleteId) return;
     setDeletingPurchase(true);
     try {
-      const response = await fetch(`${BASE_URL}/purchases/${purchaseToDeleteId}`, {
+      const response = await fetch(`${BASE_URL}/purchases/delete/${purchaseToDeleteId}`, {
         method: "DELETE",
       });
 
