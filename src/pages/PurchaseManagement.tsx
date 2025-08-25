@@ -370,7 +370,7 @@ const PurchaseManagement = () => {
             <DialogContent className="max-w-2xl bg-white rounded-lg shadow-xl">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold text-slate-800">
-                  {isEditing ? "Edit Purchase" : "Add Purchase"}
+                  {isEditing ? "Edit Purchase" : "Product Purchase"}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSavePurchase} className="space-y-4">

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, Search, Loader2 } from "lucide-react"; 
+import { Plus, Edit, Trash2, Search, Loader2, ArrowUp, ArrowDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -49,11 +49,11 @@ const ProductCategories = () => {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [isDeletingCategory, setIsDeletingCategory] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   const { toast } = useToast();
 
   const BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || "https://inventory-management-cb.vercel.app/api/v1";
-
 
   const fetchCategories = async () => {
     try {
@@ -100,7 +100,7 @@ const ProductCategories = () => {
     setCategoryImage(category.category_image);
     setIsDialogOpen(true);
   };
- 
+
   const handleDeleteClick = (category) => {
     setCategoryToDelete(category);
     setIsConfirmDialogOpen(true);
@@ -130,7 +130,7 @@ const ProductCategories = () => {
 
       setIsConfirmDialogOpen(false);
       setCategoryToDelete(null);
-      fetchCategories(); 
+      fetchCategories();
     } catch (err) {
       console.error("Error deleting category:", err);
       toast({
@@ -143,13 +143,40 @@ const ProductCategories = () => {
     }
   };
 
-
   const handleSaveCategory = async (e) => {
     e.preventDefault();
     if (!categoryName || !categoryImage) {
       toast({
         title: "Validation Error",
         description: "Category Name and Image URL are required.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Add length validation
+    if (categoryName.length > 15) {
+      toast({
+        title: "Validation Error",
+        description: "Category Name cannot exceed 15 characters.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (categoryImage.length > 255) {
+      toast({
+        title: "Validation Error",
+        description: "Image URL cannot exceed 255 characters.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (categoryDescription.length > 60) {
+      toast({
+        title: "Validation Error",
+        description: "Description cannot exceed 60 characters.",
         variant: "destructive"
       });
       return;
@@ -191,7 +218,7 @@ const ProductCategories = () => {
       setIsDialogOpen(false);
       setIsEditing(false);
       setEditingCategoryId(null);
-      fetchCategories(); 
+      fetchCategories();
     } catch (err) {
       console.error(`Error ${isEditing ? "updating" : "adding"} category:`, err);
       toast({
@@ -204,7 +231,31 @@ const ProductCategories = () => {
     }
   };
 
-  const filteredCategories = categories.filter(category =>
+  const sortedCategories = () => {
+    let sorted = [...categories];
+    if (sortConfig.key !== null) {
+      sorted.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sorted;
+  };
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const filteredCategories = sortedCategories().filter(category =>
     category.category_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (category.description && category.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
@@ -230,8 +281,7 @@ const ProductCategories = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery]);
-
+  }, [searchQuery, sortConfig]);
 
   return (
     <div className="space-y-6">
@@ -244,6 +294,7 @@ const ProductCategories = () => {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
+            {/* The single child element is correct here. Do not add anything else inside. */}
             <Button className="bg-blue-600 hover:bg-blue-700 shadow-lg" onClick={handleAddClick}>
               <Plus className="w-4 h-4 mr-2" />
               Add Category
@@ -263,6 +314,8 @@ const ProductCategories = () => {
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
                   required
+                  maxLength={15}
+
                 />
               </div>
               <div>
@@ -274,6 +327,8 @@ const ProductCategories = () => {
                   value={categoryImage}
                   onChange={(e) => setCategoryImage(e.target.value)}
                   required
+                  maxLength={255}
+
                 />
               </div>
               <div>
@@ -284,6 +339,8 @@ const ProductCategories = () => {
                   className="mt-1"
                   value={categoryDescription}
                   onChange={(e) => setCategoryDescription(e.target.value)}
+                  maxLength={60}
+
                 />
               </div>
               <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSavingCategory}>
@@ -327,8 +384,17 @@ const ProductCategories = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      <TableHead className="font-semibold text-slate-700 whitespace-nowrap">Category ID</TableHead>
-                      <TableHead className="font-semibold text-slate-700 whitespace-nowrap">Category Name</TableHead>
+                      <TableHead
+                        className="font-semibold text-slate-700 whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
+                        onClick={() => handleSort('category_name')}
+                      >
+                        <div className="flex items-center gap-1">
+                          Category Name
+                          {sortConfig.key === 'category_name' && (
+                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                          )}
+                        </div>
+                      </TableHead>
                       <TableHead className="font-semibold text-slate-700 whitespace-nowrap">Category Image</TableHead>
                       <TableHead className="font-semibold text-slate-700 whitespace-nowrap">Description</TableHead>
                       <TableHead className="font-semibold text-slate-700 whitespace-nowrap">Created At</TableHead>
@@ -338,19 +404,20 @@ const ProductCategories = () => {
                   <TableBody>
                     {currentCategories.map((category) => (
                       <TableRow key={category.category_id} className="hover:bg-slate-50">
-                        <TableCell className="text-slate-500">{category.category_id}</TableCell>
                         <TableCell className="font-medium">{category.category_name}</TableCell>
                         <TableCell>
                           <div className="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center">
-                            <img
-                              src={category.category_image}
-                              alt={`${category.category_name} image`}
-                              className="w-200 h-200 object-cover"
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = `https://placehold.co/48x48/F1F5F9/94A3B8?text=IMG`;
-                              }}
-                            />
+                            <a href={category.category_image} target="_blank" rel="noopener noreferrer">
+                              <img
+                                src={category.category_image}
+                                alt={`${category.category_name} image`}
+                                className="w-200 h-200 object-cover"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = `https://placehold.co/48x48/F1F5F9/94A3B8?text=IMG`;
+                                }}
+                              />
+                            </a>
                           </div>
                         </TableCell>
                         <TableCell className="text-slate-600">{category.description}</TableCell>
@@ -404,7 +471,7 @@ const ProductCategories = () => {
           )}
         </CardContent>
       </Card>
-      
+
       <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
@@ -412,7 +479,7 @@ const ProductCategories = () => {
           </DialogHeader>
           <div className="py-4">
             <p className="text-sm text-gray-500">
-              Are you sure you want to permanently delete the category: 
+              Are you sure you want to permanently delete the category:
               <span className="font-semibold text-gray-800 ml-1">{categoryToDelete?.category_name}</span>?
             </p>
             <p className="text-sm text-gray-500 mt-2">
@@ -420,8 +487,9 @@ const ProductCategories = () => {
             </p>
           </div>
           <div className="flex justify-end gap-2">
+            {/* The single child element is correct here. */}
             <DialogClose asChild>
-              <Button variant="outline" onClick={() => setIsConfirmDialogOpen(false)}>
+              <Button variant="outline">
                 Cancel
               </Button>
             </DialogClose>
@@ -442,7 +510,6 @@ const ProductCategories = () => {
           </div>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 };

@@ -65,7 +65,7 @@ const SalesManagement = () => {
   // Edit mode states
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  
+
   // Search and pagination
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -184,7 +184,7 @@ const SalesManagement = () => {
   // Handle form submission
   const handleSaveSale = async (e) => {
     e.preventDefault();
-    
+
     // Validate required fields
     const errors = [];
     if (!formData.customer_id) errors.push("Customer is required");
@@ -194,7 +194,7 @@ const SalesManagement = () => {
     if (!formData.delivery_by) errors.push("Delivery person is required");
     if (!formData.payment_status) errors.push("Payment status is required");
     if (!formData.payment_type) errors.push("Payment type is required");
-    
+
     formData.items.forEach((item, index) => {
       if (!item.product_id) errors.push(`Product is required for item ${index + 1}`);
       if (!item.quantity || isNaN(parseInt(item.quantity))) errors.push(`Valid quantity is required for item ${index + 1}`);
@@ -361,6 +361,7 @@ const SalesManagement = () => {
   // Filter sales based on search term
   const filteredSales = sales.filter(sale => {
     const customer = customers.find(c => c.customer_id === sale.customer_id);
+    console.log("customer", customer)
     const searchTermLower = searchTerm.toLowerCase();
     return (
       (customer?.company_name?.toLowerCase().includes(searchTermLower)) ||
@@ -374,11 +375,12 @@ const SalesManagement = () => {
   const startIndex = (currentPage - 1) * salesPerPage;
   const endIndex = startIndex + salesPerPage;
   const currentSales = filteredSales.slice(startIndex, endIndex);
+  console.log("sale", currentSales)
 
   // Helper function to get customer name by ID
-  const getCustomerName = (customerId) => {
-    const customer = customers.find(c => c.customer_id === customerId);
-    return customer ? customer.company_name : "Unknown Customer";
+  const getCustomerName = (customer_name) => {
+    const customer = customers.find(c => c.customer_name === customer_name);
+    return customer ? customer.customer_name : "Unknown Customer";
   };
 
   // Helper function to get product name by ID
@@ -399,12 +401,12 @@ const SalesManagement = () => {
           </div>
           <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
             <DialogTrigger asChild>
-              <Button 
-                onClick={() => { 
-                  setIsEditing(false); 
-                  resetForm(); 
-                  setIsFormDialogOpen(true); 
-                }} 
+              <Button
+                onClick={() => {
+                  setIsEditing(false);
+                  resetForm();
+                  setIsFormDialogOpen(true);
+                }}
                 className="bg-blue-600 hover:bg-blue-700 shadow-lg"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -418,32 +420,32 @@ const SalesManagement = () => {
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSaveSale} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4" style={{ color: 'black' }}>
                   {/* Customer Selection */}
                   <div>
                     <Label htmlFor="customer_id">Customer*</Label>
-                    <Select 
-                      value={formData.customer_id} 
-                      onValueChange={(value) => setFormData({...formData, customer_id: value})}
+                    <Select
+                      value={formData.customer_id}
+                      onValueChange={(value) => setFormData({ ...formData, customer_id: value })}
                       required
                     >
-                      <SelectTrigger className="mt-1" style={{color:'black'}}>
+                      <SelectTrigger className="mt-1" style={{ color: 'black' }}>
                         <SelectValue placeholder="Select customer" />
                       </SelectTrigger>
-                      <SelectContent style={{color:'black'}}>
+                      <SelectContent style={{color:'black'}} className="text-black">
                         {customers.map(customer => (
                           <SelectItem key={customer.customer_id} value={customer.customer_id.toString()}>
-                            {customer.company_name}
+                            {customer.customer_name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   {/* Bill Number */}
                   <div>
                     <Label htmlFor="bill_no">Bill Number*</Label>
-                    <Input 
+                    <Input
                       id="bill_no"
                       type="text"
                       placeholder="Enter bill number"
@@ -453,12 +455,12 @@ const SalesManagement = () => {
                       required
                     />
                   </div>
-                  
+
                   {/* Sale Date */}
                   <div>
                     <Label htmlFor="sale_date">Sale Date*</Label>
                     <div className="relative mt-1">
-                      <Input 
+                      <Input
                         id="sale_date"
                         type="date"
                         className="pr-10"
@@ -469,12 +471,12 @@ const SalesManagement = () => {
                       <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                     </div>
                   </div>
-                  
+
                   {/* Delivery Date */}
                   <div>
                     <Label htmlFor="delivery_date">Delivery Date*</Label>
                     <div className="relative mt-1">
-                      <Input 
+                      <Input
                         id="delivery_date"
                         type="date"
                         className="pr-10"
@@ -485,11 +487,11 @@ const SalesManagement = () => {
                       <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                     </div>
                   </div>
-                  
+
                   {/* Delivery By */}
                   <div>
                     <Label htmlFor="delivery_by">Delivery Person*</Label>
-                    <Input 
+                    <Input
                       id="delivery_by"
                       type="text"
                       placeholder="Enter delivery person name"
@@ -499,13 +501,13 @@ const SalesManagement = () => {
                       required
                     />
                   </div>
-                  
+
                   {/* Payment Status */}
                   <div>
                     <Label htmlFor="payment_status">Payment Status*</Label>
-                    <Select 
-                      value={formData.payment_status} 
-                      onValueChange={(value) => setFormData({...formData, payment_status: value})}
+                    <Select
+                      value={formData.payment_status}
+                      onValueChange={(value) => setFormData({ ...formData, payment_status: value })}
                       required
                     >
                       <SelectTrigger className="mt-1">
@@ -518,13 +520,13 @@ const SalesManagement = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   {/* Payment Type */}
                   <div>
                     <Label htmlFor="payment_type">Payment Type*</Label>
-                    <Select 
-                      value={formData.payment_type} 
-                      onValueChange={(value) => setFormData({...formData, payment_type: value})}
+                    <Select
+                      value={formData.payment_type}
+                      onValueChange={(value) => setFormData({ ...formData, payment_type: value })}
                       required
                     >
                       <SelectTrigger className="mt-1">
@@ -539,11 +541,11 @@ const SalesManagement = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   {/* Payment Details */}
                   <div>
                     <Label htmlFor="payment_details">Payment Details</Label>
-                    <Input 
+                    <Input
                       id="payment_details"
                       type="text"
                       placeholder="Enter payment details"
@@ -552,11 +554,11 @@ const SalesManagement = () => {
                       onChange={handleInputChange}
                     />
                   </div>
-                  
+
                   {/* Total Sale Price */}
                   <div>
                     <Label htmlFor="total_sale_price">Total Sale Price</Label>
-                    <Input 
+                    <Input
                       id="total_sale_price"
                       type="number"
                       step="0.01"
@@ -568,32 +570,32 @@ const SalesManagement = () => {
                     />
                   </div>
                 </div>
-                
+
                 {/* Items Section */}
                 <div className="mt-6">
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="font-semibold">Items</h3>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={addItemRow}
                     >
                       Add Item
                     </Button>
                   </div>
-                  
+
                   {formData.items.map((item, index) => (
                     <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 p-4 border rounded-lg">
                       {/* Product Selection */}
                       <div>
                         <Label>Product*</Label>
-                        <Select 
+                        <Select
                           value={item.product_id}
                           onValueChange={(value) => {
                             const updatedItems = [...formData.items];
                             updatedItems[index].product_id = value;
-                            setFormData({...formData, items: updatedItems});
+                            setFormData({ ...formData, items: updatedItems });
                           }}
                           required
                         >
@@ -609,11 +611,11 @@ const SalesManagement = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       {/* Quantity */}
                       <div>
                         <Label>Quantity*</Label>
-                        <Input 
+                        <Input
                           name="quantity"
                           type="number"
                           placeholder="Quantity"
@@ -626,16 +628,16 @@ const SalesManagement = () => {
                           required
                         />
                       </div>
-                      
+
                       {/* Unit */}
                       <div>
                         <Label>Unit*</Label>
-                        <Select 
+                        <Select
                           value={item.unit}
                           onValueChange={(value) => {
                             const updatedItems = [...formData.items];
                             updatedItems[index].unit = value;
-                            setFormData({...formData, items: updatedItems});
+                            setFormData({ ...formData, items: updatedItems });
                           }}
                           required
                         >
@@ -650,11 +652,11 @@ const SalesManagement = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       {/* Rate */}
                       <div>
                         <Label>Rate*</Label>
-                        <Input 
+                        <Input
                           name="rate"
                           type="number"
                           step="0.01"
@@ -668,14 +670,14 @@ const SalesManagement = () => {
                           required
                         />
                       </div>
-                      
+
                       {/* Remove Item Button */}
                       <div className="flex items-end">
                         {formData.items.length > 1 && (
-                          <Button 
-                            type="button" 
-                            variant="destructive" 
-                            size="sm" 
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
                             onClick={() => {
                               removeItemRow(index);
                               calculateTotal();
@@ -689,12 +691,12 @@ const SalesManagement = () => {
                     </div>
                   ))}
                 </div>
-                
+
                 {/* Submit Button */}
                 <div className="flex justify-end">
-                  <Button 
-                    type="submit" 
-                    className="bg-blue-600 hover:bg-blue-700 w-full" 
+                  <Button
+                    type="submit"
+                    className="bg-blue-600 hover:bg-blue-700 w-full"
                     disabled={loading}
                   >
                     {loading ? (
@@ -754,7 +756,7 @@ const SalesManagement = () => {
                               {sale.bill_no}
                             </TableCell>
                             <TableCell>
-                              {getCustomerName(sale.customer_id)}
+                              {getCustomerName(sale.customer_name)}
                             </TableCell>
                             <TableCell>
                               ₹{sale.total_sale_price}
@@ -806,7 +808,7 @@ const SalesManagement = () => {
                     </TableBody>
                   </Table>
                 </div>
-                
+
                 {/* Pagination */}
                 {filteredSales.length > 0 && (
                   <div className="flex justify-end mt-4">
@@ -859,9 +861,9 @@ const SalesManagement = () => {
                 Cancel
               </Button>
             </DialogClose>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeleteSale} 
+            <Button
+              variant="destructive"
+              onClick={handleDeleteSale}
               disabled={deletingSale}
             >
               {deletingSale && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

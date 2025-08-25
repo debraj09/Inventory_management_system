@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, Search, CheckCircle2, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Search, CheckCircle2, Loader2, XCircle, CircleAlert } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,7 @@ const BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || "https://inventory-man
 const VendorManagement = () => {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [deletingVendor, setDeletingVendor] = useState(false); 
+  const [deletingVendor, setDeletingVendor] = useState(false);
   const [formData, setFormData] = useState({
     vendor_name: "",
     gst_number: "",
@@ -57,6 +57,8 @@ const VendorManagement = () => {
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [vendorToDeleteId, setVendorToDeleteId] = useState(null);
+
+  const [validationErrors, setValidationErrors] = useState({});
 
   const { toast } = useToast();
 
@@ -89,16 +91,75 @@ const VendorManagement = () => {
     }
   };
 
+  const validateInput = (name, value) => {
+    let error = "";
+    switch (name) {
+      case "vendor_name":
+        if (value.length > 25) {
+          error = "Vendor Name cannot exceed 25 characters.";
+        }
+        break;
+      case "gst_number":
+        const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[Z]{1}[0-9A-Z]{1}$/;
+        if (value && !gstRegex.test(value)) {
+          error = "Invalid GST number. It should be proper and 15 characters long.";
+        }
+        break;
+          case "address":
+        if (value.length > 50) {
+          error = "Address cannot exceed 50 characters.";
+        }
+        break;
+      case "primary_contact":
+        if (value.length > 25) {
+          error = "Primary Contact Name cannot exceed 25 characters.";
+        }
+        break;
+      case "contact_number":
+        const mobileRegex = /^[0-9]{10}$/;
+        if (value && !mobileRegex.test(value)) {
+          error = "Contact Number must be exactly 10 digits.";
+        }
+        break;
+      case "email_id":
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (value && !emailRegex.test(value)) {
+          error = "Please enter a valid email address.";
+        }
+        break;
+      default:
+        break;
+    }
+    setValidationErrors(prev => ({ ...prev, [name]: error }));
+  };
+
   const handleInputChange = (e) => {
     const { id, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
       [id]: value,
     }));
+    validateInput(id, value);
+  };
+
+  const isFormValid = () => {
+    const { vendor_name, gst_number, primary_contact, contact_number, email_id } = formData;
+    const requiredFieldsFilled = vendor_name && gst_number && primary_contact && contact_number && email_id;
+    const noValidationErrors = Object.values(validationErrors).every(error => !error);
+    return requiredFieldsFilled && noValidationErrors;
   };
 
   const handleSaveVendor = async (e) => {
     e.preventDefault();
+    if (!isFormValid()) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error!",
+        description: "Please correct the form errors before submitting.",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       let apiEndpoint = `${BASE_URL}/vendors/add`;
@@ -121,13 +182,11 @@ const VendorManagement = () => {
 
       if (result.status === 1) {
         fetchVendors();
-
         toast({
           title: "Success",
           description: result.message,
           className: "bg-green-500 text-white border-green-500",
         });
-
         setIsFormDialogOpen(false);
         resetForm();
       } else {
@@ -160,12 +219,13 @@ const VendorManagement = () => {
       contact_number: vendor.contact_number || "",
       email_id: vendor.email_id || "",
     });
+    setValidationErrors({}); // Clear validation errors on edit
     setIsFormDialogOpen(true);
   };
 
   const handleDeleteVendor = async () => {
     if (!vendorToDeleteId) return;
-    setDeletingVendor(true); 
+    setDeletingVendor(true);
     try {
       const response = await fetch(`${BASE_URL}/vendors/delete/${vendorToDeleteId}`, {
         method: "DELETE",
@@ -175,7 +235,6 @@ const VendorManagement = () => {
 
       if (result.status === 1) {
         fetchVendors();
-        // Show a green success toast
         toast({
           title: "Success",
           description: result.message,
@@ -195,7 +254,7 @@ const VendorManagement = () => {
         description: "Failed to delete vendor.",
       });
     } finally {
-      setDeletingVendor(false); 
+      setDeletingVendor(false);
       setShowDeleteConfirm(false);
       setVendorToDeleteId(null);
     }
@@ -213,6 +272,7 @@ const VendorManagement = () => {
     });
     setIsEditing(false);
     setEditingId(null);
+    setValidationErrors({});
   };
 
   const filteredVendors = vendors.filter((vendor) =>
@@ -250,42 +310,179 @@ const VendorManagement = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="vendor_name">Vendor Name*</Label>
-                    <Input id="vendor_name" placeholder="Full legal name" className="mt-1"
-                      value={formData.vendor_name} onChange={handleInputChange} required />
+                    <div className="relative mt-1">
+                      <Input
+                        id="vendor_name"
+                        placeholder="Full legal name"
+                        value={formData.vendor_name}
+                        onChange={handleInputChange}
+                        maxLength={25}
+                        required
+                        className={validationErrors.vendor_name ? "border-red-500 pr-10" : "pr-10"}
+                      />
+                      {formData.vendor_name && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {validationErrors.vendor_name ? (
+                            <XCircle className="w-5 h-5 text-red-500" />
+                          ) : (
+                            <CheckCircle2 className="w-5 h-5 text-green-500" />
+                          )}
+                        </span>
+                      )}
+                    </div>
+                    {validationErrors.vendor_name && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <CircleAlert className="w-4 h-4" />
+                        {validationErrors.vendor_name}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="gst_number">GST Number*</Label>
-                    <Input id="gst_number" placeholder="GSTIN..." className="mt-1"
-                      value={formData.gst_number} onChange={handleInputChange} />
+                    <div className="relative mt-1">
+                      <Input
+                        id="gst_number"
+                        placeholder="GSTIN..."
+                        value={formData.gst_number}
+                        onChange={handleInputChange}
+                        maxLength={15}
+                        required
+                        className={validationErrors.gst_number ? "border-red-500 pr-10" : "pr-10"}
+                      />
+                      {formData.gst_number && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {validationErrors.gst_number ? (
+                            <XCircle className="w-5 h-5 text-red-500" />
+                          ) : (
+                            <CheckCircle2 className="w-5 h-5 text-green-500" />
+                          )}
+                        </span>
+                      )}
+                    </div>
+                    {validationErrors.gst_number && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <CircleAlert className="w-4 h-4" />
+                        {validationErrors.gst_number}
+                      </p>
+                    )}
                   </div>
                   <div>
-                    <Label htmlFor="license_number">License Number*</Label>
-                    <Input id="license_number" className="mt-1"
-                      value={formData.license_number} onChange={handleInputChange} />
+                    <Label htmlFor="license_number">License Number</Label>
+                    <Input
+                      id="license_number"
+                      className="mt-1"
+                      value={formData.license_number}
+                      onChange={handleInputChange}
+                    />
                   </div>
                   <div>
                     <Label htmlFor="address">Address*</Label>
-                    <Textarea id="address" placeholder="Vendor address" className="mt-1"
-                      value={formData.address} onChange={handleInputChange} />
+                    <Textarea
+                      id="address"
+                      placeholder="Vendor address"
+                      className="mt-1"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      required
+                    />
+                     {validationErrors.address && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <CircleAlert className="w-4 h-4" />
+                        {validationErrors.address}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="primary_contact">Primary Contact Name*</Label>
-                    <Input id="primary_contact" placeholder="Name of primary contact" className="mt-1"
-                      value={formData.primary_contact} onChange={handleInputChange} />
+                    <div className="relative mt-1">
+                      <Input
+                        id="primary_contact"
+                        placeholder="Name of primary contact"
+                        value={formData.primary_contact}
+                        onChange={handleInputChange}
+                        maxLength={25}
+                        required
+                        className={validationErrors.primary_contact ? "border-red-500 pr-10" : "pr-10"}
+                      />
+                      {formData.primary_contact && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {validationErrors.primary_contact ? (
+                            <XCircle className="w-5 h-5 text-red-500" />
+                          ) : (
+                            <CheckCircle2 className="w-5 h-5 text-green-500" />
+                          )}
+                        </span>
+                      )}
+                    </div>
+                    {validationErrors.primary_contact && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <CircleAlert className="w-4 h-4" />
+                        {validationErrors.primary_contact}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="contact_number">Contact Number*</Label>
-                    <Input id="contact_number" placeholder="Phone/mobile" className="mt-1"
-                      value={formData.contact_number} onChange={handleInputChange} />
+                    <div className="relative mt-1">
+                      <Input
+                        id="contact_number"
+                        placeholder="Phone/mobile"
+                        value={formData.contact_number}
+                        onChange={handleInputChange}
+                        maxLength={10}
+                        required
+                        className={validationErrors.contact_number ? "border-red-500 pr-10" : "pr-10"}
+                      />
+                      {formData.contact_number && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {validationErrors.contact_number ? (
+                            <XCircle className="w-5 h-5 text-red-500" />
+                          ) : (
+                            <CheckCircle2 className="w-5 h-5 text-green-500" />
+                          )}
+                        </span>
+                      )}
+                    </div>
+                    {validationErrors.contact_number && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <CircleAlert className="w-4 h-4" />
+                        {validationErrors.contact_number}
+                      </p>
+                    )}
                   </div>
                   <div className="md:col-span-2">
                     <Label htmlFor="email_id">Email ID*</Label>
-                    <Input id="email_id" type="email" placeholder="Contact email" className="mt-1"
-                      value={formData.email_id} onChange={handleInputChange} />
+                    <div className="relative mt-1">
+                      <Input
+                        id="email_id"
+                        type="email"
+                        placeholder="Contact email"
+                        value={formData.email_id}
+                        onChange={handleInputChange}
+                        required
+                        className={validationErrors.email_id ? "border-red-500 pr-10" : "pr-10"}
+                      />
+                      {formData.email_id && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {validationErrors.email_id ? (
+                            <XCircle className="w-5 h-5 text-red-500" />
+                          ) : (
+                            <CheckCircle2 className="w-5 h-5 text-green-500" />
+                          )}
+                        </span>
+                      )}
+                    </div>
+                    {validationErrors.email_id && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <CircleAlert className="w-4 h-4" />
+                        {validationErrors.email_id}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700 w-full shadow-lg transition-transform transform hover:scale-105" disabled={loading}>
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700 w-full shadow-lg transition-transform transform hover:scale-105" disabled={loading || !isFormValid()}>
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     {loading ? (isEditing ? "Updating Vendor..." : "Adding Vendor...") : (isEditing ? "Update Vendor" : "Add Vendor")}
                   </Button>
                 </div>
@@ -324,7 +521,7 @@ const VendorManagement = () => {
                         <TableHead className="font-semibold text-slate-700 whitespace-nowrap">GST Number</TableHead>
                         <TableHead className="font-semibold text-slate-700 whitespace-nowrap">License Number</TableHead>
                         <TableHead className="font-semibold text-slate-700 whitespace-nowrap">Address</TableHead>
-                        <TableHead className="font-semibold text-slate-700 whitespace-nowrap">Primary Contact</TableHead>
+                        <TableHead className="font-semibold text-slate-700 whitespace-nowrap">Primary Contact Name</TableHead>
                         <TableHead className="font-semibold text-slate-700 whitespace-nowrap">Contact Number</TableHead>
                         <TableHead className="font-semibold text-slate-700 whitespace-nowrap">Email ID</TableHead>
                         <TableHead className="font-semibold text-slate-700 text-center">Actions</TableHead>
